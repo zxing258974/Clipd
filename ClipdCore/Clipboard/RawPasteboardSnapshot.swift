@@ -13,6 +13,8 @@ public struct RawPasteboardSnapshot: Sendable {
     public let imageData: Data?
     /// 图片扩展名("png" | "tiff")。
     public let imageExt: String?
+    /// 复制的文件(Finder)的 file URL 绝对串;非文件为空。
+    public let fileURLs: [String]
     public let sourceBundleID: String?
     public let sourceAppName: String?
 
@@ -23,6 +25,7 @@ public struct RawPasteboardSnapshot: Sendable {
         text: String? = nil,
         imageData: Data? = nil,
         imageExt: String? = nil,
+        fileURLs: [String] = [],
         sourceBundleID: String? = nil,
         sourceAppName: String? = nil
     ) {
@@ -32,6 +35,7 @@ public struct RawPasteboardSnapshot: Sendable {
         self.text = text
         self.imageData = imageData
         self.imageExt = imageExt
+        self.fileURLs = fileURLs
         self.sourceBundleID = sourceBundleID
         self.sourceAppName = sourceAppName
     }

@@ -17,6 +17,8 @@ final class AppCoordinator {
     private let panel: PanelController
     private let hotkeys: HotkeyManager
     private var evictionTimer: Timer?
+    private var accessibilityObserver: NSObjectProtocol?
+    private var isAccessibilityAlertShowing = false
 
     init() throws {
         let settings = UserDefaultsSettings()
@@ -78,30 +80,73 @@ final class AppCoordinator {
             self?.panel.toggle()
         }
 
-        // 选中条目 → 粘贴回前台 App。
+        // 选中条目 → 还原焦点并粘贴回前台 App。
         panel.onChoose = { [weak self] item in
-            Task { await self?.pasteService.paste(item) }
+            guard let self else { return }
+            let pid = self.panel.previousApp?.processIdentifier
+            Task { [weak self] in await self?.pasteService.paste(item, reactivatingPID: pid) }
+        }
+
+        // 缺辅助功能权限(只复制未自动粘贴)时弹窗引导授权。
+        accessibilityObserver = NotificationCenter.default.addObserver(
+            forName: .clipdPasteNeedsAccessibility, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.presentAccessibilityAlert() }
         }
 
         panel.installStatusItem()
         hotkeys.registerDefaults()
         monitor.start()
 
-        // 启动维护:清理过期记录 + 未引用的孤儿 blob。
+        // 首次启动若未授予辅助功能权限,主动弹系统授权框(注册当前运行的二进制,
+        // 确保系统列表里的条目就是正在运行的这个 Clipd)。
+        permissions.refresh()
+        if !permissions.accessibilityGranted {
+            permissions.requestAccessibilityPrompt()
+        }
+
+        // 启动维护:清理过期记录 + 超额条数 + 未引用的孤儿 blob。
         Task { [weak self] in
             guard let self else { return }
             await self.trimming.evictExpired(retentionDays: self.settings.retentionDays)
+            await self.trimming.trim(maxItems: self.settings.maxItems)
             await self.trimming.sweepOrphanBlobs()
         }
 
-        // 每小时清理一次过期记录(读取实时设置)。
+        // 每小时清理一次:过期记录 + 超额条数(读取实时设置,使设置页下调即便无新复制也能生效)。
         let timer = Timer(timeInterval: 3600, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self else { return }
-                Task { await self.trimming.evictExpired(retentionDays: self.settings.retentionDays) }
+                Task {
+                    await self.trimming.evictExpired(retentionDays: self.settings.retentionDays)
+                    await self.trimming.trim(maxItems: self.settings.maxItems)
+                }
             }
         }
         RunLoop.main.add(timer, forMode: .common)
         self.evictionTimer = timer
+    }
+
+    /// 提示用户开启辅助功能权限(自动粘贴所需)。一次只弹一个。
+    private func presentAccessibilityAlert() {
+        guard !isAccessibilityAlertShowing else { return }
+        isAccessibilityAlertShowing = true
+        defer { isAccessibilityAlertShowing = false }
+
+        let alert = NSAlert()
+        alert.messageText = "需要「辅助功能」权限才能自动粘贴"
+        alert.informativeText = """
+        内容已复制到剪贴板,可手动按 ⌘V 粘贴。
+        要让 Clipd 双击即自动粘贴,请在「系统设置 → 隐私与安全性 → 辅助功能」开启 Clipd,然后完全退出并重新打开 Clipd。
+
+        若已开启仍提示无权限:在该列表用「–」移除旧的 Clipd,再点下面「去开启…」让系统重新添加当前这个 Clipd,勾选后重启。
+        """
+        alert.addButton(withTitle: "去开启…")
+        alert.addButton(withTitle: "稍后")
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            permissions.requestAccessibilityPrompt()
+            permissions.openAccessibilitySettings()
+        }
     }
 }

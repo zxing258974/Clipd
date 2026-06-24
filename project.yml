@@ -12,10 +12,13 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     CODE_SIGN_STYLE: Manual
-    CODE_SIGN_IDENTITY: "-"
-    DEVELOPMENT_TEAM: ""
     ENABLE_HARDENED_RUNTIME: NO
     SWIFT_STRICT_CONCURRENCY: complete
+
+# 签名身份走 xcconfig:公开版 ad-hoc;维护者在 Config/Local.xcconfig 本地覆盖(不提交)。
+configFiles:
+  Debug: Config/Signing.xcconfig
+  Release: Config/Signing.xcconfig
 
 packages:
   KeyboardShortcuts:
@@ -43,6 +46,7 @@ targets:
         INFOPLIST_FILE: App/Info.plist
         CODE_SIGN_ENTITLEMENTS: App/Clipd.entitlements
         GENERATE_INFOPLIST_FILE: "NO"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 
   # 单元测试:以 Clipd app 为 host(xcodegen 自动配 TEST_HOST),@testable import Clipd。
   ClipdTests:

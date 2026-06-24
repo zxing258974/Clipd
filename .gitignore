@@ -13,3 +13,10 @@ xcuserdata/
 
 # macOS
 .DS_Store
+
+# 分发产物(不提交打包的 DMG)
+dist/
+*.dmg
+
+# 本地签名覆盖(个人证书/团队,勿提交)
+Config/Local.xcconfig

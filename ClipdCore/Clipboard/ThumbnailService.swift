@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 public struct ThumbnailService: Sendable {
     public let maxPixel: Int
 
-    public init(maxPixel: Int = 256) {
+    public init(maxPixel: Int = 512) {
         self.maxPixel = maxPixel
     }
 

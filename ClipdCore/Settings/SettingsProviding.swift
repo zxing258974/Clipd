@@ -20,7 +20,7 @@ public struct DefaultSettings: SettingsProviding {
     public var storeConcealedMasked: Bool
 
     public init(
-        maxItems: Int = 999,
+        maxItems: Int = 1000,
         retentionDays: Int = 7,
         pollInterval: TimeInterval = 0.5,
         storeConcealedMasked: Bool = false
@@ -45,7 +45,7 @@ public struct UserDefaultsSettings: SettingsProviding {
     public init() {}
 
     public var maxItems: Int {
-        UserDefaults.standard.object(forKey: Keys.maxItems) as? Int ?? 999
+        UserDefaults.standard.object(forKey: Keys.maxItems) as? Int ?? 1000
     }
     public var retentionDays: Int {
         UserDefaults.standard.object(forKey: Keys.retentionDays) as? Int ?? 7

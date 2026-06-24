@@ -134,4 +134,23 @@ final class CaptureServiceTests: XCTestCase {
         let count = try await repo.count()
         XCTAssertEqual(count, 0)
     }
+
+    func testCapturesFileURLAsFileNotImage() async throws {
+        let (service, repo, _) = try makeStack()
+        let tmp = TestSupport.tempDir().appendingPathComponent("doc.pdf")
+        try Data("pdf-bytes".utf8).write(to: tmp)
+        // 同时携带"图标"图片数据,验证文件优先于图片(Finder 复制文件的真实情形)。
+        let icon = TestSupport.makePNG(width: 32, height: 32)
+        let snapshot = RawPasteboardSnapshot(
+            changeCount: 1, imageData: icon, imageExt: "png",
+            fileURLs: [tmp.absoluteString], sourceAppName: "访达"
+        )
+        let outcome = await service.handle(snapshot)
+        XCTAssertEqual(outcome, .captured)
+
+        let items = try await repo.fetch(HistoryQuery())
+        let item = try XCTUnwrap(items.first)
+        XCTAssertEqual(item.kind, .fileURL, "复制的文件应记为文件而非图片")
+        XCTAssertEqual(item.previewText, "doc.pdf")
+    }
 }

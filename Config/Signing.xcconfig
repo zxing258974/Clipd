@@ -1,0 +1,11 @@
+// 代码签名默认值(公开仓库)。
+// 默认 ad-hoc:任何人克隆后都能本机构建,无需 Apple 账号。
+//
+// 维护者若想要稳定签名(辅助功能 TCC 授权重新编译后不失效),
+// 在 Config/Local.xcconfig 写入自己的团队与证书(该文件已被 .gitignore 忽略,不会提交):
+//   DEVELOPMENT_TEAM = XXXXXXXXXX
+//   CODE_SIGN_IDENTITY = Apple Development: you@example.com (XXXXXXXXXX)
+CODE_SIGN_IDENTITY = -
+DEVELOPMENT_TEAM =
+
+#include? "Local.xcconfig"

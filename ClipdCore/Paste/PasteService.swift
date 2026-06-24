@@ -29,7 +29,7 @@ public final class PasteService {
         self.permissions = permissions
     }
 
-    public func paste(_ item: ClipItem) async {
+    public func paste(_ item: ClipItem, reactivatingPID pid: pid_t? = nil) async {
         // 1. 懒加载负载。
         guard let ref = try? await repository.payloadRef(for: item.id) else { return }
         let data: Data
@@ -50,14 +50,19 @@ public final class PasteService {
         capture.noteSelfWrite(hash: CaptureService.contentHash(data))
         monitor.ignoreChangeCount(newChangeCount)
 
-        // 4. 校验权限;缺失则降级为"只复制"。
+        // 4. 校验权限;缺失则降级为"只复制"并发通知引导授权。
         permissions.refresh()
         guard permissions.accessibilityGranted else {
             NotificationCenter.default.post(name: .clipdPasteNeedsAccessibility, object: nil)
             return
         }
 
-        // 5. 模拟 ⌘V。
+        // 5. 还原前台 App 焦点,待其窗口重新成为 key 后再模拟 ⌘V
+        //    (面板隐藏后焦点恢复是异步的,过早 post 会落空或粘到别处)。
+        if let pid, let app = NSRunningApplication(processIdentifier: pid), app != .current {
+            app.activate()
+        }
+        try? await Task.sleep(for: .milliseconds(120))
         simulatePaste()
     }
 

@@ -9,12 +9,28 @@ public enum PasteboardWriter {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
 
+        // 文件:写回为 file URL(粘的是文件引用,不是路径文本)。marker 放在首个 item。
+        if kind == .fileURL {
+            let urls = String(decoding: data, as: UTF8.self)
+                .split(separator: "\n").compactMap { URL(string: String($0)) }
+            if !urls.isEmpty {
+                let items = urls.enumerated().map { index, url -> NSPasteboardItem in
+                    let pbItem = NSPasteboardItem()
+                    pbItem.setString(url.absoluteString, forType: .fileURL)
+                    if index == 0 { pbItem.setData(Data(), forType: PasteboardMarker.appMarker) }
+                    return pbItem
+                }
+                pasteboard.writeObjects(items)
+                return pasteboard.changeCount
+            }
+        }
+
         let item = NSPasteboardItem()
         switch kind {
         case .image:
             let type: NSPasteboard.PasteboardType = (imageExt?.lowercased() == "tiff") ? .tiff : .png
             item.setData(data, forType: type)
-        case .text, .rtf, .html, .fileURL:
+        default:
             if let string = String(data: data, encoding: .utf8) {
                 item.setString(string, forType: .string)
             } else {

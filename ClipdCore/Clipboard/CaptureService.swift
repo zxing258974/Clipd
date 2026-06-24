@@ -98,7 +98,7 @@ public final class CaptureService {
             contentHash: hash,
             appBundleID: snapshot.sourceBundleID,
             appName: snapshot.sourceAppName,
-            byteSize: payload.bytes.count,
+            byteSize: payload.byteSize,
             payloadRef: prepared.payloadRef,
             thumbnailPath: prepared.thumbnailPath
         )
@@ -120,6 +120,8 @@ public final class CaptureService {
         let previewText: String?
         let searchText: String
         let date: Date
+        /// 展示用大小(图片=图片字节,文件=文件实际大小,文本=字节数)。
+        let byteSize: Int
     }
 
     private struct PreparedStorage: Sendable {
@@ -129,7 +131,28 @@ public final class CaptureService {
 
     private func makePayload(from snapshot: RawPasteboardSnapshot) -> Payload? {
         let timestamp = now()
-        // 优先级:图片 > 文本(MVP)。
+        // 优先级:文件 > 图片 > 文本。文件优先可避免把 Finder 文件的图标当成图片。
+        if !snapshot.fileURLs.isEmpty {
+            let names = snapshot.fileURLs.compactMap { URL(string: $0)?.lastPathComponent }.joined(separator: ", ")
+            let joined = snapshot.fileURLs.joined(separator: "\n")
+            var totalSize = 0
+            for urlString in snapshot.fileURLs {
+                if let url = URL(string: urlString),
+                   let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+                   let size = attrs[.size] as? Int {
+                    totalSize += size
+                }
+            }
+            return Payload(
+                kind: .fileURL,
+                bytes: Data(joined.utf8),
+                ext: nil,
+                previewText: names.isEmpty ? "文件" : names,
+                searchText: (names + " " + joined).lowercased(),
+                date: timestamp,
+                byteSize: totalSize
+            )
+        }
         if let imageData = snapshot.imageData, !imageData.isEmpty {
             let appName = snapshot.sourceAppName ?? "图片"
             return Payload(
@@ -138,17 +161,20 @@ public final class CaptureService {
                 ext: snapshot.imageExt ?? "png",
                 previewText: nil,
                 searchText: "\(appName) 图片".lowercased(),
-                date: timestamp
+                date: timestamp,
+                byteSize: imageData.count
             )
         }
         if let text = snapshot.text, !text.isEmpty {
+            let data = Data(text.utf8)
             return Payload(
                 kind: .text,
-                bytes: Data(text.utf8),
+                bytes: data,
                 ext: nil,
                 previewText: String(text.prefix(500)),
                 searchText: text.lowercased(),
-                date: timestamp
+                date: timestamp,
+                byteSize: data.count
             )
         }
         return nil
