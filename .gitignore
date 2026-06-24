@@ -1,0 +1,15 @@
+# xcodegen 生成的工程(源真相是 project.yml,用 `xcodegen generate` 重建)
+*.xcodeproj
+
+# 构建产物
+/.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# SPM
+.swiftpm/
+.build-spm/
+
+# macOS
+.DS_Store

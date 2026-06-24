@@ -1,0 +1,71 @@
+name: Clipd
+options:
+  bundleIdPrefix: com.zhangxing
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  defaultConfig: Debug
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+    SWIFT_STRICT_CONCURRENCY: complete
+
+packages:
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: "1.10.0"
+  Sauce:
+    url: https://github.com/Clipy/Sauce
+    from: "2.5.0"
+
+targets:
+  # 单 app target:App 入口 + ClipdCore/ 子目录(可复用逻辑,阶段2 可抽成独立 target)。
+  Clipd:
+    type: application
+    platform: macOS
+    sources:
+      - App
+      - ClipdCore
+    dependencies:
+      - package: KeyboardShortcuts
+      - package: Sauce
+    settings:
+      base:
+        PRODUCT_NAME: Clipd
+        PRODUCT_BUNDLE_IDENTIFIER: com.zhangxing.Clipd
+        INFOPLIST_FILE: App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/Clipd.entitlements
+        GENERATE_INFOPLIST_FILE: "NO"
+
+  # 单元测试:以 Clipd app 为 host(xcodegen 自动配 TEST_HOST),@testable import Clipd。
+  ClipdTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - ClipdTests
+    dependencies:
+      - target: Clipd
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zhangxing.ClipdTests
+        GENERATE_INFOPLIST_FILE: "YES"
+
+schemes:
+  Clipd:
+    build:
+      targets:
+        Clipd: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - ClipdTests

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- 非沙盒:不包含 com.apple.security.app-sandbox。
+         沙盒会禁止跨 App 投递 CGEvent 与读取任意文件 bookmark。 -->
+</dict>
+</plist>
