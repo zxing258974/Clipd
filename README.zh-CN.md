@@ -2,6 +2,11 @@
 
 [English](README.md) · **中文**
 
+![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-1f6feb)
+![Swift](https://img.shields.io/badge/Swift-6-f05138?logo=swift&logoColor=white)
+![License](https://img.shields.io/github/license/zxing258974/Clipd?color=brightgreen)
+![Stars](https://img.shields.io/github/stars/zxing258974/Clipd?style=social)
+
 一款快速、原生的 macOS 剪贴板历史管理工具。Clipd 常驻菜单栏,记录你复制过的一切,并用一个快捷键随时取回。
 
 ## 功能
@@ -94,6 +99,27 @@ Swift 6(严格并发)· SwiftUI + AppKit · SwiftData · macOS 14+。
 ## 隐私
 
 Clipd 捕获的所有内容仅存储在本机 `~/Library/Application Support/Clipd/` 下,不会离开你的设备。被其他 App(如密码管理器)标记为机密/临时/自动生成的内容会被跳过,因此不会记录密码。
+
+## 路线图
+
+- [x] 捕获文本、图片、链接、颜色、代码、文件
+- [x] 底部卡片栏:搜索、类型筛选、固定
+- [x] 按时间与条数清理;尊重隐私标记
+- [x] 设置:保留时长、开机自启、外观、强调色、快捷键
+- [ ] Quick Look 预览(空格)与粘贴提示
+- [ ] 收藏夹 / 标签
+- [ ] Developer ID 公证发布
+
+## 参与贡献
+
+欢迎提 issue 与 PR。
+
+```bash
+brew install xcodegen
+xcodegen generate && open Clipd.xcodeproj
+```
+
+运行测试:`xcodebuild -project Clipd.xcodeproj -scheme Clipd -destination 'platform=macOS' test`。
 
 ## 许可证
 
