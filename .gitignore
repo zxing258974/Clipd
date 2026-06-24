@@ -20,3 +20,6 @@ dist/
 
 # 本地签名覆盖(个人证书/团队,勿提交)
 Config/Local.xcconfig
+
+# 设计稿与内部规划(仅本地保留,不同步到仓库)
+design/
