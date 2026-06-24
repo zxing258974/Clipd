@@ -19,6 +19,16 @@
 - **浅色与深色** —— 跟随系统外观,并可选强调色。
 - **高效存储** —— 文本存入本地 SwiftData;图片落盘并只在库内保留小缩略图,数据库保持轻量。
 
+## 安装(下载的构建版)
+
+下载的构建版为 ad‑hoc 签名、**未公证**,macOS Gatekeeper 会在首次启动时拦截。打开 DMG,把 **Clipd** 拖到 **应用程序**,然后执行一次以清除隔离标记:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Clipd.app
+```
+
+(或右键 App →「打开」→「打开」。)从源码构建则无此限制。
+
 ## 环境要求
 
 - macOS 14(Sonoma)及以上

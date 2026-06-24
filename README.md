@@ -19,6 +19,16 @@ A fast, native clipboard‑history manager for macOS. Clipd lives in your menu b
 - **Light & dark** — adapts to the system appearance, with a choice of accent colors.
 - **Efficient storage** — text lives in a local SwiftData store; images are written to disk with small thumbnails, so the database stays tiny.
 
+## Install (downloaded build)
+
+Downloaded builds are ad‑hoc‑signed and **not notarized**, so macOS Gatekeeper blocks them on first launch. Open the DMG, drag **Clipd** to **Applications**, then clear the quarantine flag once:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Clipd.app
+```
+
+(Or right‑click the app → **Open** → **Open**.) Building from source has no such restriction.
+
 ## Requirements
 
 - macOS 14 (Sonoma) or later
