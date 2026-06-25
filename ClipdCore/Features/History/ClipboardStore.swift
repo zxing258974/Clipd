@@ -42,6 +42,7 @@ public final class ClipboardStore {
     public func prepareForPresentation() {
         if !searchText.isEmpty { searchText = "" }
         filter = .all
+        selectedID = nil // 每次打开默认选中第一个(随后 runQuery 置为 visible.first)
         focusToken &+= 1
     }
 
