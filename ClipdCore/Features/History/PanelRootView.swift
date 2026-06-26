@@ -7,6 +7,7 @@ struct PanelRootView: View {
     var onOpenSettings: () -> Void
 
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("clipd.appearance") private var appearance = "system"
     @FocusState private var searchFocused: Bool
 
@@ -27,9 +28,16 @@ struct PanelRootView: View {
         }
         .background(theme.barTint)
         .background(.ultraThinMaterial)
+        .overlay {
+            if store.isPreviewing {
+                PreviewOverlayView(store: store, theme: theme)
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.98)))
+            }
+        }
         .clipShape(topCorners)
         .overlay(topCorners.strokeBorder(theme.hairline, lineWidth: 1))
         .ignoresSafeArea()
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: store.isPreviewing)
         .task {
             searchFocused = true
             await store.reload()
@@ -126,6 +134,7 @@ struct PanelRootView: View {
     private func footer(_ theme: ClipTheme) -> some View {
         HStack(spacing: 18) {
             hint("⏎", "粘贴", theme)
+            hint("空格", "预览", theme)
             hint("← →", "切换", theme)
             hint("⌘⌫", "删除", theme)
             hint("⌘P", "固定", theme)

@@ -12,6 +12,8 @@ public final class PanelController: NSObject {
     private let panel: SearchPanel
     private var statusItem: NSStatusItem?
     private var localKeyMonitor: Any?
+    private var defaultsObserver: Any?
+    private var isApplyingIconVisibility = false
     private let panelHeight: CGFloat = 400
     private var lastShownAt: Date?
     private var settingsWindow: NSWindow?
@@ -47,6 +49,25 @@ public final class PanelController: NSObject {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         statusItem = item
+        updateStatusItemVisibility()
+        // 仅监听设置页发出的专属通知。不要监听全局 `UserDefaults.didChangeNotification`:
+        // 设置 `NSStatusItem.isVisible` 会让 AppKit 把状态写回 UserDefaults 并同步触发该通知,
+        // 从而递归回到本方法直至爆栈(已由崩溃日志确认)。
+        defaultsObserver = NotificationCenter.default.addObserver(
+            forName: .clipdMenuBarIconVisibilityChanged, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.updateStatusItemVisibility() }
+        }
+    }
+
+    /// 按设置显隐菜单栏图标。隐藏时保留 `NSStatusItem`(仅 `isVisible=false`),便于随时再显示。
+    /// `isApplyingIconVisibility` 防重入:即便将来再有同步回调也不会递归。
+    private func updateStatusItemVisibility() {
+        guard !isApplyingIconVisibility else { return }
+        isApplyingIconVisibility = true
+        defer { isApplyingIconVisibility = false }
+        let show = UserDefaults.standard.object(forKey: UserDefaultsSettings.Keys.showMenuBarIcon) as? Bool ?? true
+        if statusItem?.isVisible != show { statusItem?.isVisible = show }
     }
 
     /// 菜单栏图标:与 App 图标同款剪贴板造型的单色模板图(随菜单栏明暗自动着色、保持清晰)。
@@ -216,6 +237,11 @@ public final class PanelController: NSObject {
         case (123, _), (126, _): // ← / ↑ :上一张(更新)
             store.moveSelectionUp()
             return true
+        case (49, false): // 空格 :预览开/关(搜索框有内容时留给输入空格)
+            if store.isPreviewing { store.closePreview(); return true }
+            guard store.searchText.isEmpty else { return false }
+            store.togglePreview()
+            return true
         case (36, _), (76, _): // ↩︎ / enter :粘贴
             if let item = store.selectedItem { choose(item) }
             return true
@@ -225,8 +251,8 @@ public final class PanelController: NSObject {
         case (35, true): // ⌘P :固定/取消固定
             Task { await store.togglePinSelected() }
             return true
-        case (53, _): // ⎋
-            hide()
+        case (53, _): // ⎋ :先关预览,否则关面板
+            if store.isPreviewing { store.closePreview() } else { hide() }
             return true
         default:
             return false

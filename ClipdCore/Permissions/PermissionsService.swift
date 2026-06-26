@@ -4,6 +4,8 @@ import ApplicationServices
 public extension Notification.Name {
     /// 缺少辅助功能权限、粘贴降级为"只复制"时发出。
     static let clipdPasteNeedsAccessibility = Notification.Name("clipd.pasteNeedsAccessibility")
+    /// 用户在设置页切换"菜单栏显示图标"时发出(仅此一处,避免监听全局 UserDefaults 变化引发回环)。
+    static let clipdMenuBarIconVisibilityChanged = Notification.Name("clipd.menuBarIconVisibilityChanged")
 }
 
 /// 辅助功能(Accessibility)权限的检测与引导。

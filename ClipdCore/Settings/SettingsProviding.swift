@@ -10,6 +10,8 @@ public protocol SettingsProviding: Sendable {
     var pollInterval: TimeInterval { get }
     /// 命中 ConcealedType 时是否仍存储(遮蔽显示)。默认 false=完全不存。
     var storeConcealedMasked: Bool { get }
+    /// 是否在菜单栏显示图标。默认 true;关闭后仍可用快捷键唤起。
+    var showMenuBarIcon: Bool { get }
 }
 
 /// 常量实现(测试/默认用)。
@@ -18,17 +20,20 @@ public struct DefaultSettings: SettingsProviding {
     public var retentionDays: Int
     public var pollInterval: TimeInterval
     public var storeConcealedMasked: Bool
+    public var showMenuBarIcon: Bool
 
     public init(
         maxItems: Int = 1000,
         retentionDays: Int = 7,
         pollInterval: TimeInterval = 0.5,
-        storeConcealedMasked: Bool = false
+        storeConcealedMasked: Bool = false,
+        showMenuBarIcon: Bool = true
     ) {
         self.maxItems = maxItems
         self.retentionDays = retentionDays
         self.pollInterval = pollInterval
         self.storeConcealedMasked = storeConcealedMasked
+        self.showMenuBarIcon = showMenuBarIcon
     }
 }
 
@@ -40,6 +45,7 @@ public struct UserDefaultsSettings: SettingsProviding {
         public static let retentionDays = "clipd.retentionDays"
         public static let pollInterval = "clipd.pollInterval"
         public static let storeConcealedMasked = "clipd.storeConcealedMasked"
+        public static let showMenuBarIcon = "clipd.showMenuBarIcon"
     }
 
     public init() {}
@@ -55,5 +61,8 @@ public struct UserDefaultsSettings: SettingsProviding {
     }
     public var storeConcealedMasked: Bool {
         UserDefaults.standard.object(forKey: Keys.storeConcealedMasked) as? Bool ?? false
+    }
+    public var showMenuBarIcon: Bool {
+        UserDefaults.standard.object(forKey: Keys.showMenuBarIcon) as? Bool ?? true
     }
 }

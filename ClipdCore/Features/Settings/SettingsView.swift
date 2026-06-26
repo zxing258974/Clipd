@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import KeyboardShortcuts
 
 /// 设置窗口:System Settings 风格的分组表单。三个标签:通用 / 外观 / 快捷键。
@@ -8,6 +9,7 @@ struct SettingsView: View {
     @AppStorage("clipd.maxItems") private var maxItems = 1000
     @AppStorage("clipd.accentHex") private var accentHex = "#0A84FF"
     @AppStorage("clipd.appearance") private var appearance = "system"
+    @AppStorage("clipd.showMenuBarIcon") private var showMenuBarIcon = true
     @State private var launchAtLogin = LoginItem.isEnabled
 
     private let accents: [(name: String, hex: String)] = [
@@ -40,10 +42,23 @@ struct SettingsView: View {
                 Toggle("开机时自动启动 Clipd", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, on in LoginItem.set(on) }
             }
+            Section("菜单栏") {
+                Toggle("在菜单栏显示 Clipd 图标", isOn: $showMenuBarIcon)
+                    .onChange(of: showMenuBarIcon) { _, _ in
+                        NotificationCenter.default.post(name: .clipdMenuBarIconVisibilityChanged, object: nil)
+                    }
+                if !showMenuBarIcon {
+                    Text("图标已隐藏。仍可用快捷键(默认 ⌘⇧C)唤起面板;在面板里点齿轮可重新打开本设置。")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
             Section {
                 Text("超过保留时长或条数的未固定记录会自动清除;已固定项永久保留。时长按最后使用时间计算,期限内再次复制会续期。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+            Section {
+                Button("退出 Clipd") { NSApplication.shared.terminate(nil) }
             }
         }
         .formStyle(.grouped)

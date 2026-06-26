@@ -50,6 +50,10 @@ public final class PasteService {
         capture.noteSelfWrite(hash: CaptureService.contentHash(data))
         monitor.ignoreChangeCount(newChangeCount)
 
+        // 3.5 置顶:被粘贴(或降级为只复制)的条目成为"最近使用",下次打开排到最前。
+        //     直接更新 lastUsedAt,不经监听管线,故无回环之虞。
+        try? await repository.touch(id: item.id, lastUsedAt: Date())
+
         // 4. 校验权限;缺失则降级为"只复制"并发通知引导授权。
         permissions.refresh()
         guard permissions.accessibilityGranted else {
