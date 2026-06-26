@@ -4,6 +4,7 @@ import SwiftUI
 struct PanelRootView: View {
     @Bindable var store: ClipboardStore
     var onChoose: (ClipItem) -> Void
+    var onCopy: (ClipItem) -> Void
     var onOpenSettings: () -> Void
 
     @Environment(\.colorScheme) private var scheme
@@ -119,7 +120,7 @@ struct PanelRootView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            HistoryStripView(store: store, onChoose: onChoose)
+            HistoryStripView(store: store, onChoose: onChoose, onCopy: onCopy)
         }
     }
 

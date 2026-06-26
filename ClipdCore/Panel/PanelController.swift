@@ -20,6 +20,8 @@ public final class PanelController: NSObject {
 
     /// 选中条目执行(由 AppCoordinator 注入:粘贴回前台 App)。
     public var onChoose: ((ClipItem) -> Void)?
+    /// 右键"复制":仅写回剪贴板(由 AppCoordinator 注入)。
+    public var onCopy: ((ClipItem) -> Void)?
     /// 面板显示前记录的前台 App(粘贴目标)。
     public private(set) var previousApp: NSRunningApplication?
 
@@ -30,6 +32,7 @@ public final class PanelController: NSObject {
         let root = PanelRootView(
             store: store,
             onChoose: { [weak self] item in self?.choose(item) },
+            onCopy: { [weak self] item in self?.copyItem(item) },
             onOpenSettings: { [weak self] in self?.openSettings() }
         )
         panel.contentView = NSHostingView(rootView: root)
@@ -188,6 +191,12 @@ public final class PanelController: NSObject {
     private func choose(_ item: ClipItem) {
         hide()
         onChoose?(item)
+    }
+
+    /// 右键"复制":写回剪贴板后关闭面板,焦点回到前台 App,由用户手动 ⌘V。
+    private func copyItem(_ item: ClipItem) {
+        hide()
+        onCopy?(item)
     }
 
     // MARK: 定位

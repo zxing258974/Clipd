@@ -30,44 +30,50 @@ public final class PasteService {
     }
 
     public func paste(_ item: ClipItem, reactivatingPID pid: pid_t? = nil) async {
-        // 1. 懒加载负载。
-        guard let ref = try? await repository.payloadRef(for: item.id) else { return }
-        let data: Data
-        var imageExt: String?
-        switch ref {
-        case .inline(let inlineData):
-            data = inlineData
-        case .file(let path):
-            guard let fileData = try? blobStore.read(relativePath: path) else { return }
-            data = fileData
-            imageExt = (path as NSString).pathExtension
-        }
+        // 写回剪贴板(含防回环与置顶);失败则中止。
+        guard await writeToPasteboard(item) else { return }
 
-        // 2. 写回(带 marker)。
-        let newChangeCount = PasteboardWriter.write(kind: item.kind, data: data, imageExt: imageExt)
-
-        // 3. 防回环:登记自身写入指纹 + 让 Monitor 忽略该 changeCount。
-        capture.noteSelfWrite(hash: CaptureService.contentHash(data))
-        monitor.ignoreChangeCount(newChangeCount)
-
-        // 3.5 置顶:被粘贴(或降级为只复制)的条目成为"最近使用",下次打开排到最前。
-        //     直接更新 lastUsedAt,不经监听管线,故无回环之虞。
-        try? await repository.touch(id: item.id, lastUsedAt: Date())
-
-        // 4. 校验权限;缺失则降级为"只复制"并发通知引导授权。
+        // 校验权限;缺失则降级为"只复制"并发通知引导授权。
         permissions.refresh()
         guard permissions.accessibilityGranted else {
             NotificationCenter.default.post(name: .clipdPasteNeedsAccessibility, object: nil)
             return
         }
 
-        // 5. 还原前台 App 焦点,待其窗口重新成为 key 后再模拟 ⌘V
-        //    (面板隐藏后焦点恢复是异步的,过早 post 会落空或粘到别处)。
+        // 还原前台 App 焦点,待其窗口重新成为 key 后再模拟 ⌘V
+        // (面板隐藏后焦点恢复是异步的,过早 post 会落空或粘到别处)。
         if let pid, let app = NSRunningApplication(processIdentifier: pid), app != .current {
             app.activate()
         }
         try? await Task.sleep(for: .milliseconds(120))
         simulatePaste()
+    }
+
+    /// 仅把条目写回系统剪贴板(不模拟 ⌘V、不需要辅助功能权限)。供右键"复制"使用。
+    public func copy(_ item: ClipItem) async {
+        _ = await writeToPasteboard(item)
+    }
+
+    /// 懒加载负载 → 写回剪贴板(带 marker)→ 防回环登记 → 置顶。成功返回 true。
+    /// 直接更新 `lastUsedAt`,不经监听管线,故无回环之虞。
+    private func writeToPasteboard(_ item: ClipItem) async -> Bool {
+        guard let ref = try? await repository.payloadRef(for: item.id) else { return false }
+        let data: Data
+        var imageExt: String?
+        switch ref {
+        case .inline(let inlineData):
+            data = inlineData
+        case .file(let path):
+            guard let fileData = try? blobStore.read(relativePath: path) else { return false }
+            data = fileData
+            imageExt = (path as NSString).pathExtension
+        }
+
+        let newChangeCount = PasteboardWriter.write(kind: item.kind, data: data, imageExt: imageExt)
+        capture.noteSelfWrite(hash: CaptureService.contentHash(data))
+        monitor.ignoreChangeCount(newChangeCount)
+        try? await repository.touch(id: item.id, lastUsedAt: Date())
+        return true
     }
 
     private func simulatePaste() {

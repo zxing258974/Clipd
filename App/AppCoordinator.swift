@@ -87,6 +87,11 @@ final class AppCoordinator {
             Task { [weak self] in await self?.pasteService.paste(item, reactivatingPID: pid) }
         }
 
+        // 右键"复制" → 仅写回剪贴板(不模拟粘贴)。
+        panel.onCopy = { [weak self] item in
+            Task { [weak self] in await self?.pasteService.copy(item) }
+        }
+
         // 缺辅助功能权限(只复制未自动粘贴)时弹窗引导授权。
         accessibilityObserver = NotificationCenter.default.addObserver(
             forName: .clipdPasteNeedsAccessibility, object: nil, queue: .main
