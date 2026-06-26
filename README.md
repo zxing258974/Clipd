@@ -11,11 +11,12 @@ A fast, native clipboard‑history manager for macOS. Clipd lives in your menu b
 
 ## Features
 
-- **Menu‑bar app** — no Dock icon. Summon a card bar from the bottom of the screen with a global hotkey (default <kbd>⌘⇧C</kbd>, customizable).
+- **Menu‑bar app** — no Dock icon. Summon a card bar from the bottom of the screen with a global hotkey (default <kbd>⌘⇧C</kbd>, customizable). The menu‑bar icon can be hidden for a hotkey‑only setup.
 - **Captures every kind** — plain text, rich text, code, links, colors (hex), images and files. Each type gets its own card layout.
 - **Keyboard‑first**
   - <kbd>←</kbd> <kbd>→</kbd> move selection · <kbd>⌘←</kbd> / <kbd>⌘→</kbd> jump to first / last
-  - <kbd>⏎</kbd> or double‑click to paste into the frontmost app
+  - <kbd>Space</kbd> to preview the selected item (Quick Look style)
+  - <kbd>⏎</kbd> or double‑click to paste into the frontmost app — pasted items jump back to the top
   - <kbd>⌘⌫</kbd> delete · <kbd>⌘P</kbd> pin / unpin · <kbd>esc</kbd> close
 - **Search & filter** — type to search; filter by All / Pinned / Text / Links / Images / Colors / Files.
 - **Pin favorites** — pinned items stay forever and are exempt from cleanup.
@@ -104,11 +105,11 @@ Everything Clipd captures is stored locally under `~/Library/Application Support
 
 - [x] Capture text, images, links, colors, code and files
 - [x] Bottom card bar with search, type filters and pinning
+- [x] Space to preview the selected item (Quick Look style)
+- [x] Recently pasted items move back to the top (MRU)
 - [x] Time- and count-based cleanup; privacy markers honored
-- [x] Settings: retention, launch at login, appearance, accent, shortcut
-- [ ] Quick Look preview (Space) and paste confirmation
+- [x] Settings: retention, launch at login, appearance, accent, shortcut, hide menu-bar icon
 - [ ] Pinboards / tags
-- [ ] Notarized Developer ID releases
 
 ## Contributing
 
