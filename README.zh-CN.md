@@ -12,7 +12,7 @@
 ## 功能
 
 - **菜单栏应用** —— 无 Dock 图标。用全局快捷键(默认 <kbd>⌘⇧C</kbd>,可自定义)从屏幕底部唤起卡片栏。也可隐藏菜单栏图标,只用快捷键唤起。
-- **全类型捕获** —— 纯文本、富文本、代码、链接、颜色(hex)、图片、文件,每种类型有专属卡片版式。
+- **全类型捕获** —— 纯文本、代码、链接、颜色(hex)、图片、文件,每种类型有专属卡片版式。
 - **键盘优先**
   - <kbd>←</kbd> <kbd>→</kbd> 切换选中 · <kbd>⌘←</kbd> / <kbd>⌘→</kbd> 跳到首张 / 末张
   - <kbd>空格</kbd> 预览选中项(Quick Look 风格)
@@ -28,7 +28,7 @@
 
 ## 安装(下载的构建版)
 
-下载的构建版为 ad‑hoc 签名、**未公证**,macOS Gatekeeper 会在首次启动时拦截。打开 DMG,把 **Clipd** 拖到 **应用程序**,然后执行一次以清除隔离标记:
+从 [Releases](https://github.com/zxing258974/Clipd/releases) 页下载最新的 `.dmg`。构建版用开发者证书签名但**未公证**,macOS Gatekeeper 会在首次启动时拦截。打开 DMG,把 **Clipd** 拖到 **应用程序**,然后执行一次以清除隔离标记:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/Clipd.app
@@ -71,7 +71,7 @@ CODE_SIGN_IDENTITY = Apple Development: you@example.com (XXXXXXXXXX)
 
 1. 启动 Clipd —— 菜单栏出现剪贴板图标。
 2. 复制一段文本或图片,即被记入历史。
-3. 按 <kbd>⌘⇧C</kbd> 打开卡片栏;输入即搜,<kbd>←</kbd> <kbd>→</kbd> 选择,<kbd>⏎</kbd> 或双击粘贴。
+3. 按 <kbd>⌘⇧C</kbd> 打开卡片栏;输入即搜,<kbd>←</kbd> <kbd>→</kbd> 选择,<kbd>空格</kbd> 预览,<kbd>⏎</kbd> 或双击粘贴。右击卡片可复制、删除或打标签。
 4. 如需自动粘贴,在 **系统设置 → 隐私与安全性 → 辅助功能** 中授权 Clipd。未授权时降级为"只复制"(由你手动按 <kbd>⌘V</kbd>)。
 
 ## 架构
@@ -112,6 +112,11 @@ Clipd 捕获的所有内容仅存储在本机 `~/Library/Application Support/Cli
 - [x] 设置:保留时长、开机自启、外观、强调色、快捷键、隐藏菜单栏图标
 - [x] 右键卡片复制或删除
 - [x] 标签:新建、打标签、按标签筛选
+
+### 未来想法
+
+- [ ] 保留富文本 / HTML 格式(目前仅存纯文本)
+- [ ] <kbd>⌘1</kbd>–<kbd>⌘9</kbd> 快速粘贴最近的某一条
 
 ## 参与贡献
 

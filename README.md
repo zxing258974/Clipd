@@ -12,7 +12,7 @@ A fast, native clipboard‑history manager for macOS. Clipd lives in your menu b
 ## Features
 
 - **Menu‑bar app** — no Dock icon. Summon a card bar from the bottom of the screen with a global hotkey (default <kbd>⌘⇧C</kbd>, customizable). The menu‑bar icon can be hidden for a hotkey‑only setup.
-- **Captures every kind** — plain text, rich text, code, links, colors (hex), images and files. Each type gets its own card layout.
+- **Captures every kind** — plain text, code, links, colors (hex), images and files. Each type gets its own card layout.
 - **Keyboard‑first**
   - <kbd>←</kbd> <kbd>→</kbd> move selection · <kbd>⌘←</kbd> / <kbd>⌘→</kbd> jump to first / last
   - <kbd>Space</kbd> to preview the selected item (Quick Look style)
@@ -28,7 +28,7 @@ A fast, native clipboard‑history manager for macOS. Clipd lives in your menu b
 
 ## Install (downloaded build)
 
-Downloaded builds are ad‑hoc‑signed and **not notarized**, so macOS Gatekeeper blocks them on first launch. Open the DMG, drag **Clipd** to **Applications**, then clear the quarantine flag once:
+Download the latest `.dmg` from the [Releases](https://github.com/zxing258974/Clipd/releases) page. Builds are signed with a development certificate but **not notarized**, so macOS Gatekeeper blocks them on first launch. Open the DMG, drag **Clipd** to **Applications**, then clear the quarantine flag once:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/Clipd.app
@@ -71,7 +71,7 @@ CODE_SIGN_IDENTITY = Apple Development: you@example.com (XXXXXXXXXX)
 
 1. Launch Clipd — a clipboard icon appears in the menu bar.
 2. Copy some text or an image; it is captured into the history.
-3. Press <kbd>⌘⇧C</kbd> to open the card bar; type to search, <kbd>←</kbd> <kbd>→</kbd> to select, <kbd>⏎</kbd> or double‑click to paste.
+3. Press <kbd>⌘⇧C</kbd> to open the card bar; type to search, <kbd>←</kbd> <kbd>→</kbd> to select, <kbd>Space</kbd> to preview, <kbd>⏎</kbd> or double‑click to paste. Right‑click a card to copy, delete or tag it.
 4. For automatic paste, grant Accessibility in **System Settings → Privacy & Security → Accessibility**. Without it, Clipd falls back to copy‑only (you press <kbd>⌘V</kbd> yourself).
 
 ## Architecture
@@ -112,6 +112,11 @@ Everything Clipd captures is stored locally under `~/Library/Application Support
 - [x] Settings: retention, launch at login, appearance, accent, shortcut, hide menu-bar icon
 - [x] Right-click a card to copy or delete it
 - [x] Tags: create, assign and filter by tag
+
+### Possibly later
+
+- [ ] Preserve rich-text / HTML formatting (currently plain text only)
+- [ ] <kbd>⌘1</kbd>–<kbd>⌘9</kbd> to paste one of the most recent items
 
 ## Contributing
 
