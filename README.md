@@ -20,6 +20,7 @@ A fast, native clipboard‑history manager for macOS. Clipd lives in your menu b
   - <kbd>⌘⌫</kbd> delete · <kbd>⌘P</kbd> pin / unpin · <kbd>esc</kbd> close
 - **Search & filter** — type to search; filter by All / Pinned / Text / Links / Images / Colors / Files.
 - **Pin favorites** — pinned items stay forever and are exempt from cleanup.
+- **Tags & quick actions** — right-click a card to copy, delete or tag it; create tags on the fly and filter the bar by any tag.
 - **Automatic cleanup** — keep the last *N* days (default 7) and at most *N* items (default 1000); pinned items are never removed.
 - **Privacy‑respecting** — honors the `org.nspasteboard.*` markers used by password managers; concealed / transient / auto‑generated content is never stored. All data stays on your Mac.
 - **Light & dark** — adapts to the system appearance, with a choice of accent colors.
@@ -109,7 +110,8 @@ Everything Clipd captures is stored locally under `~/Library/Application Support
 - [x] Recently pasted items move back to the top (MRU)
 - [x] Time- and count-based cleanup; privacy markers honored
 - [x] Settings: retention, launch at login, appearance, accent, shortcut, hide menu-bar icon
-- [ ] Pinboards / tags
+- [x] Right-click a card to copy or delete it
+- [x] Tags: create, assign and filter by tag
 
 ## Contributing
 

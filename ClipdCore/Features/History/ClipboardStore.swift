@@ -11,7 +11,11 @@ public final class ClipboardStore {
     public var selectedID: UUID?
     /// 是否正在展示选中项的大图预览(空格开/关)。
     public var isPreviewing = false
-    /// 当前筛选(全部/已固定/文本/链接/图片/颜色/文件)。
+    /// 是否正在新建标签(面板内输入覆盖层开/关)。
+    public var isCreatingTag = false
+    /// "新建标签"输入框内容。
+    public var newTagDraft = ""
+    /// 当前筛选(全部/已固定/文本/链接/图片/颜色/文件,或某个标签)。
     public private(set) var filter: ClipFilter = .all
     /// 每次展示面板自增,驱动搜索框重新获焦。
     public private(set) var focusToken: Int = 0
@@ -23,6 +27,8 @@ public final class ClipboardStore {
     @ObservationIgnored private let repository: ClipItemRepository
     @ObservationIgnored private let blobStore: BlobStoring
     @ObservationIgnored private var searchTask: Task<Void, Never>?
+    /// "新建标签"流程中记录的目标条目。
+    @ObservationIgnored private var pendingTagItemID: UUID?
 
     public init(repository: ClipItemRepository, blobStore: BlobStoring) {
         self.repository = repository
@@ -40,12 +46,20 @@ public final class ClipboardStore {
         return visible.first { $0.id == id } ?? visible.first
     }
 
+    /// 当前历史中出现过的全部标签(并集,排序),用于渲染标签 pills。
+    public var allTags: [String] {
+        Array(Set(items.flatMap(\.tags))).sorted()
+    }
+
     /// 每次展示面板前调用:清空上次搜索词、复位筛选、请求搜索框重新获焦。
     public func prepareForPresentation() {
         if !searchText.isEmpty { searchText = "" }
         filter = .all
         selectedID = nil // 每次打开默认选中第一个(随后 runQuery 置为 visible.first)
         isPreviewing = false // 每次打开都从卡片墙开始,而非上次的预览态
+        isCreatingTag = false
+        newTagDraft = ""
+        pendingTagItemID = nil
         focusToken &+= 1
     }
 
@@ -75,6 +89,46 @@ public final class ClipboardStore {
     }
 
     public func closePreview() { isPreviewing = false }
+
+    // MARK: 标签
+
+    /// 在条目上添加/移除某标签。
+    public func toggleTag(_ tag: String, on item: ClipItem) async {
+        var tags = Set(item.tags)
+        if tags.contains(tag) { tags.remove(tag) } else { tags.insert(tag) }
+        try? await repository.setTags(Array(tags), id: item.id)
+        await reload()
+    }
+
+    /// 打开"新建标签"输入(记录目标条目;关掉预览以免叠层)。
+    public func beginCreatingTag(for item: ClipItem) {
+        pendingTagItemID = item.id
+        newTagDraft = ""
+        isPreviewing = false
+        isCreatingTag = true
+    }
+
+    /// 取消"新建标签"输入。
+    public func cancelNewTag() {
+        isCreatingTag = false
+        newTagDraft = ""
+        pendingTagItemID = nil
+        focusToken &+= 1 // 关闭后焦点回到搜索框
+    }
+
+    /// 提交"新建标签":把输入加入目标条目的标签集合。
+    public func commitNewTag() async {
+        let name = newTagDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, let id = pendingTagItemID,
+              let item = items.first(where: { $0.id == id }) else {
+            cancelNewTag(); return
+        }
+        var tags = Set(item.tags)
+        tags.insert(name)
+        try? await repository.setTags(Array(tags), id: id)
+        cancelNewTag()
+        await reload()
+    }
 
     public func togglePin(_ item: ClipItem) async {
         try? await repository.setPinned(id: item.id, !item.isPinned)
@@ -151,6 +205,8 @@ public final class ClipboardStore {
     private func runQuery() async {
         let query = HistoryQuery(searchText: searchText.isEmpty ? nil : searchText, limit: 200)
         items = (try? await repository.fetch(query)) ?? []
+        // 标签筛选下,若该标签已不存在(最后一条带它的记录被删/取消标签),回退到全部。
+        if case .tag(let name) = filter, !allTags.contains(name) { filter = .all }
         let visible = visibleItems
         if selectedID == nil || !visible.contains(where: { $0.id == selectedID }) {
             selectedID = visible.first?.id

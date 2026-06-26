@@ -43,12 +43,30 @@ struct ClipCardView: View {
             appIcon(p)
             Text(p.appName).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
             Spacer(minLength: 4)
+            if let firstTag = item.tags.first {
+                tagChip(firstTag, extra: item.tags.count - 1)
+            }
             if item.isPinned {
-                Circle().fill(ClipTheme.accent).frame(width: 6, height: 6)
+                Image(systemName: "pin.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(ClipTheme.accent)
+                    .help("已固定")
             }
             Text(p.relativeTime).font(.system(size: 11)).foregroundStyle(.tertiary).fixedSize()
         }
         .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 8)
+    }
+
+    /// 已打标签的卡片在头部显示一个紧凑标签 chip(多于一个时附 “+N”)。
+    private func tagChip(_ name: String, extra: Int) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: "tag.fill").font(.system(size: 8))
+            Text(extra > 0 ? "\(name) +\(extra)" : name)
+                .font(.system(size: 10, weight: .medium)).lineLimit(1)
+        }
+        .foregroundStyle(ClipTheme.accent)
+        .padding(.horizontal, 6).padding(.vertical, 2)
+        .background(Capsule().fill(ClipTheme.accent.opacity(0.14)))
     }
 
     @ViewBuilder private func appIcon(_ p: CardPresentation) -> some View {

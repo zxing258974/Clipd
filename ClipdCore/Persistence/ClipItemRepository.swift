@@ -21,6 +21,9 @@ public protocol ClipItemRepository: Sendable {
     /// 设置/取消固定。
     func setPinned(id: UUID, _ pinned: Bool) async throws
 
+    /// 覆盖设置条目的标签集合。
+    func setTags(_ tags: [String], id: UUID) async throws
+
     /// 取负载位置(粘贴时懒加载用)。
     func payloadRef(for id: UUID) async throws -> PayloadRef?
 

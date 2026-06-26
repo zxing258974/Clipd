@@ -28,6 +28,9 @@ final class ClipItemEntity {
     var filePath: String?
     var thumbnailPath: String?
 
+    /// 用户自定义标签。新增属性带默认值 —— SwiftData 对既有库做轻量迁移(旧记录置为空数组)。
+    var tags: [String] = []
+
     init(id: UUID = UUID(), draft: ClipItemDraft) {
         self.id = id
         self.kindRaw = draft.kind.rawValue
@@ -66,7 +69,8 @@ final class ClipItemEntity {
             appBundleID: appBundleID,
             appName: appName,
             byteSize: byteSize,
-            thumbnailPath: thumbnailPath
+            thumbnailPath: thumbnailPath,
+            tags: tags
         )
     }
 

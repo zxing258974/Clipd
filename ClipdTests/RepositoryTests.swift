@@ -178,4 +178,12 @@ final class RepositoryTests: XCTestCase {
         let count = try await repo.count()
         XCTAssertEqual(count, 0)
     }
+
+    func testSetTagsDeduplicatesTrimsAndSorts() async throws {
+        let repo = try makeRepo()
+        let item = try await repo.insert(textDraft("hi", hash: "t1"))
+        try await repo.setTags(["  work ", "ideas", "work", ""], id: item.id)
+        let items = try await repo.fetch(HistoryQuery())
+        XCTAssertEqual(items.first?.tags, ["ideas", "work"])
+    }
 }

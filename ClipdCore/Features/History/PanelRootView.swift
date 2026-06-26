@@ -35,10 +35,17 @@ struct PanelRootView: View {
                     .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.98)))
             }
         }
+        .overlay {
+            if store.isCreatingTag {
+                NewTagOverlayView(store: store, theme: theme)
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.98)))
+            }
+        }
         .clipShape(topCorners)
         .overlay(topCorners.strokeBorder(theme.hairline, lineWidth: 1))
         .ignoresSafeArea()
         .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: store.isPreviewing)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: store.isCreatingTag)
         .task {
             searchFocused = true
             await store.reload()
@@ -65,23 +72,30 @@ struct PanelRootView: View {
     }
 
     private func pills(_ theme: ClipTheme) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        let filters = ClipFilter.builtins + store.allTags.map { ClipFilter.tag($0) }
+        return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 7) {
-                ForEach(ClipFilter.allCases, id: \.self) { filter in
-                    let active = store.filter == filter
-                    Button { store.setFilter(filter) } label: {
-                        Text(filter.label)
-                            .font(.system(size: 13, weight: active ? .semibold : .regular))
-                            .foregroundStyle(active ? Color.white : Color.secondary)
-                            .padding(.horizontal, 14).padding(.vertical, 6)
-                            .background(Capsule().fill(active ? ClipTheme.accent : theme.pill))
-                    }
-                    .buttonStyle(.plain)
+                ForEach(filters, id: \.self) { filter in
+                    pillButton(filter, theme)
                 }
             }
             .padding(.vertical, 2)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func pillButton(_ filter: ClipFilter, _ theme: ClipTheme) -> some View {
+        let active = store.filter == filter
+        return Button { store.setFilter(filter) } label: {
+            HStack(spacing: 4) {
+                if filter.isTag { Image(systemName: "tag.fill").font(.system(size: 9)) }
+                Text(filter.label).font(.system(size: 13, weight: active ? .semibold : .regular))
+            }
+            .foregroundStyle(active ? Color.white : Color.secondary)
+            .padding(.horizontal, 14).padding(.vertical, 6)
+            .background(Capsule().fill(active ? ClipTheme.accent : theme.pill))
+        }
+        .buttonStyle(.plain)
     }
 
     private func searchField(_ theme: ClipTheme) -> some View {
@@ -126,6 +140,7 @@ struct PanelRootView: View {
 
     private var emptyText: String {
         if !store.searchText.isEmpty { return "没有匹配的剪贴板内容" }
+        if case .tag = store.filter { return "该标签下暂无内容" }
         if store.filter != .all { return "该分类下暂无内容" }
         return "暂无剪贴板历史"
     }

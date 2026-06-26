@@ -19,6 +19,8 @@ public struct ClipItem: Identifiable, Hashable, Sendable {
     public let byteSize: Int
     /// 图片缩略图的 blobs 相对路径(非图片为 nil)。
     public let thumbnailPath: String?
+    /// 用户自定义标签(可为空)。
+    public let tags: [String]
 
     public init(
         id: UUID,
@@ -31,7 +33,8 @@ public struct ClipItem: Identifiable, Hashable, Sendable {
         appBundleID: String?,
         appName: String?,
         byteSize: Int,
-        thumbnailPath: String?
+        thumbnailPath: String?,
+        tags: [String] = []
     ) {
         self.id = id
         self.kind = kind
@@ -44,5 +47,6 @@ public struct ClipItem: Identifiable, Hashable, Sendable {
         self.appName = appName
         self.byteSize = byteSize
         self.thumbnailPath = thumbnailPath
+        self.tags = tags
     }
 }

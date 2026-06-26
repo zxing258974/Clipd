@@ -108,4 +108,71 @@ final class ClipboardStoreTests: XCTestCase {
         XCTAssertEqual(store.visibleItems.first?.previewText, "A")
         XCTAssertEqual(store.selectedItem?.previewText, "A")
     }
+
+    // MARK: 标签
+
+    func testToggleTagAddsThenRemoves() async throws {
+        let (store, repo, _) = try makeStore()
+        _ = try await repo.insert(textDraft("hi", hash: "tg1"))
+        await store.reload()
+        let item = try XCTUnwrap(store.selectedItem)
+
+        await store.toggleTag("work", on: item)
+        XCTAssertEqual(store.selectedItem?.tags, ["work"])
+
+        let updated = try XCTUnwrap(store.selectedItem)
+        await store.toggleTag("work", on: updated)
+        XCTAssertEqual(store.selectedItem?.tags, [])
+    }
+
+    func testAllTagsAreUnionSorted() async throws {
+        let (store, repo, _) = try makeStore()
+        let a = try await repo.insert(textDraft("a", hash: "a"))
+        let b = try await repo.insert(textDraft("b", hash: "b"))
+        try await repo.setTags(["zeta", "alpha"], id: a.id)
+        try await repo.setTags(["alpha"], id: b.id)
+        await store.reload()
+        XCTAssertEqual(store.allTags, ["alpha", "zeta"])
+    }
+
+    func testFilterByTagShowsOnlyTaggedItems() async throws {
+        let (store, repo, _) = try makeStore()
+        let a = try await repo.insert(textDraft("tagged", hash: "a"))
+        _ = try await repo.insert(textDraft("plain", hash: "b"))
+        try await repo.setTags(["work"], id: a.id)
+        await store.reload()
+
+        store.setFilter(.tag("work"))
+        XCTAssertEqual(store.visibleItems.map(\.previewText), ["tagged"])
+    }
+
+    func testCommitNewTagAddsToPendingItem() async throws {
+        let (store, repo, _) = try makeStore()
+        _ = try await repo.insert(textDraft("hi", hash: "c1"))
+        await store.reload()
+        let item = try XCTUnwrap(store.selectedItem)
+
+        store.beginCreatingTag(for: item)
+        XCTAssertTrue(store.isCreatingTag)
+        store.newTagDraft = "  reply  "
+        await store.commitNewTag()
+
+        XCTAssertFalse(store.isCreatingTag)
+        XCTAssertTrue(store.allTags.contains("reply"))
+        XCTAssertEqual(store.selectedItem?.tags, ["reply"])
+    }
+
+    func testFilterFallsBackToAllWhenTagVanishes() async throws {
+        let (store, repo, _) = try makeStore()
+        let a = try await repo.insert(textDraft("only", hash: "a"))
+        try await repo.setTags(["solo"], id: a.id)
+        await store.reload()
+        store.setFilter(.tag("solo"))
+        XCTAssertEqual(store.visibleItems.count, 1)
+
+        // 取消该条目的标签 -> 标签消失 -> 筛选回退到全部。
+        let item = try XCTUnwrap(store.selectedItem)
+        await store.toggleTag("solo", on: item)
+        XCTAssertEqual(store.filter, .all)
+    }
 }

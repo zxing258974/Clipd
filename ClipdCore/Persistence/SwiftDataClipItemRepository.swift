@@ -30,6 +30,14 @@ actor SwiftDataClipItemRepository: ClipItemRepository {
         try modelContext.save()
     }
 
+    func setTags(_ tags: [String], id: UUID) throws {
+        guard let entity = try entity(id: id) else { return }
+        // 去重 + 去空白 + 稳定排序,保证展示顺序确定。
+        entity.tags = Array(Set(tags.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty })).sorted()
+        try modelContext.save()
+    }
+
     // MARK: 读取
 
     func fetch(_ query: HistoryQuery) throws -> [ClipItem] {

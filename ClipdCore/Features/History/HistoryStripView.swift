@@ -24,6 +24,21 @@ struct HistoryStripView: View {
                         .simultaneousGesture(TapGesture(count: 1).onEnded { store.selectedID = item.id })
                         .contextMenu {
                             Button { onCopy(item) } label: { Label("复制", systemImage: "doc.on.doc") }
+                            Menu {
+                                ForEach(store.allTags, id: \.self) { tag in
+                                    Button { Task { await store.toggleTag(tag, on: item) } } label: {
+                                        if item.tags.contains(tag) { Label(tag, systemImage: "checkmark") }
+                                        else { Text(tag) }
+                                    }
+                                }
+                                if !store.allTags.isEmpty { Divider() }
+                                Button { store.beginCreatingTag(for: item) } label: {
+                                    Label("新建标签…", systemImage: "plus")
+                                }
+                            } label: {
+                                Label("标签", systemImage: "tag")
+                            }
+                            Divider()
                             Button(role: .destructive) {
                                 Task { await store.delete(item) }
                             } label: {

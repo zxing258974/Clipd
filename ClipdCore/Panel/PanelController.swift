@@ -233,6 +233,14 @@ public final class PanelController: NSObject {
     /// 返回 true 表示已处理(吞掉该事件,不传给搜索框)。
     /// 方向/回车/Esc 始终拦截做卡片导航;⌘⌫ 删除、⌘P 固定(纯 ⌫/P 留给搜索框输入)。
     private func handleKeyDown(keyCode: UInt16, command: Bool) -> Bool {
+        // 新建标签输入中:只接管 esc(取消)/回车(提交),其余按键留给文本框正常编辑。
+        if store.isCreatingTag {
+            switch keyCode {
+            case 53: store.cancelNewTag(); return true
+            case 36, 76: Task { await store.commitNewTag() }; return true
+            default: return false
+            }
+        }
         switch (keyCode, command) {
         case (123, true): // ⌘← :跳到第一个
             store.selectFirst()
@@ -276,6 +284,8 @@ extension PanelController: NSWindowDelegate {
     public func windowDidResignKey(_ notification: Notification) {
         // 滑入瞬间可能发生的 resignKey(动画 / 输入法候选窗等)不应误关闭面板。
         if let shownAt = lastShownAt, Date().timeIntervalSince(shownAt) < 0.35 { return }
+        // 正在新建标签时不自动关闭(避免输入过程被误关)。
+        if store.isCreatingTag { return }
         hide()
     }
 }

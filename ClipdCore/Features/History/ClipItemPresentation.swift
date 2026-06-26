@@ -3,9 +3,13 @@ import AppKit
 
 // MARK: - 筛选
 
-/// 顶部筛选 pills。
-public enum ClipFilter: String, CaseIterable, Sendable {
+/// 顶部筛选 pills。内置类型 + 动态标签 `.tag`。
+public enum ClipFilter: Hashable, Sendable {
     case all, pinned, text, links, images, colors, files
+    case tag(String)
+
+    /// 内置筛选(不含动态标签),用于固定顺序渲染 pills。
+    public static let builtins: [ClipFilter] = [.all, .pinned, .text, .links, .images, .colors, .files]
 
     var label: String {
         switch self {
@@ -16,8 +20,12 @@ public enum ClipFilter: String, CaseIterable, Sendable {
         case .images: "图片"
         case .colors: "颜色"
         case .files: "文件"
+        case .tag(let name): name
         }
     }
+
+    /// 是否为标签筛选(UI 用以区分样式)。
+    var isTag: Bool { if case .tag = self { return true } else { return false } }
 }
 
 // MARK: - 展示类型(由内容派生,不改数据模型)
@@ -82,6 +90,7 @@ enum ClipClassifier {
         case .images: return cardKind(for: item) == .image
         case .colors: return cardKind(for: item) == .color
         case .files: return cardKind(for: item) == .file
+        case .tag(let name): return item.tags.contains(name)
         }
     }
 }
