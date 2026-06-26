@@ -9,6 +9,8 @@
 
 A fast, native clipboard‑history manager for macOS. Clipd lives in your menu bar, remembers everything you copy, and brings it back with a single keystroke.
 
+![Clipd — a full-width card bar summoned at the bottom of the screen](docs/screenshot.png)
+
 ## Features
 
 - **Menu‑bar app** — no Dock icon. Summon a card bar from the bottom of the screen with a global hotkey (default <kbd>⌘⇧C</kbd>, customizable). The menu‑bar icon can be hidden for a hotkey‑only setup.
