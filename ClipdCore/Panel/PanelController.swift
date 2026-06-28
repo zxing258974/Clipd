@@ -230,16 +230,34 @@ public final class PanelController: NSObject {
         }
     }
 
-    /// 返回 true 表示已处理(吞掉该事件,不传给搜索框)。
-    /// 方向/回车/Esc 始终拦截做卡片导航;⌘⌫ 删除、⌘P 固定(纯 ⌫/P 留给搜索框输入)。
+    /// 是否有文本框正在编辑(field editor 为第一响应者)。比 SwiftUI @FocusState 在非激活面板里更可靠。
+    private var isEditingText: Bool {
+        panel.firstResponder is NSTextView
+    }
+
+    /// 当前文本框是否处于输入法合成态(有 marked text)。
+    private var hasMarkedText: Bool {
+        (panel.firstResponder as? NSTextView)?.hasMarkedText() ?? false
+    }
+
+    /// 返回 true 表示已处理(吞掉该事件,不再下传)。
+    /// 导航模式(搜索框未获焦)拦截方向/回车/空格做卡片操作;搜索框获焦时一律放行,
+    /// 交给文本框与输入法(修复中文合成时回车被当成粘贴的问题)。
     private func handleKeyDown(keyCode: UInt16, command: Bool) -> Bool {
-        // 新建标签输入中:只接管 esc(取消)/回车(提交),其余按键留给文本框正常编辑。
+        // 新建标签输入中:输入法合成时全交给输入法;否则 esc 取消 / 回车提交。
         if store.isCreatingTag {
+            if hasMarkedText { return false }
             switch keyCode {
             case 53: store.cancelNewTag(); return true
             case 36, 76: Task { await store.commitNewTag() }; return true
             default: return false
             }
+        }
+        // 文本框正在编辑(搜索框获焦,以 AppKit 第一响应者为准,比 @FocusState 在非激活面板里可靠):
+        // 按键交给文本框与输入法(空格选词、回车确认、方向翻页);仅非合成态用 Esc 关闭面板。
+        if isEditingText {
+            if keyCode == 53, !hasMarkedText { hide(); return true }
+            return false
         }
         switch (keyCode, command) {
         case (123, true): // ⌘← :跳到第一个
@@ -254,9 +272,7 @@ public final class PanelController: NSObject {
         case (123, _), (126, _): // ← / ↑ :上一张(更新)
             store.moveSelectionUp()
             return true
-        case (49, false): // 空格 :预览开/关(搜索框有内容时留给输入空格)
-            if store.isPreviewing { store.closePreview(); return true }
-            guard store.searchText.isEmpty else { return false }
+        case (49, false): // 空格 :预览开/关(此处必为导航模式,搜索框获焦已提前放行)
             store.togglePreview()
             return true
         case (36, _), (76, _): // ↩︎ / enter :粘贴
