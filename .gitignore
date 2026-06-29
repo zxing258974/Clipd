@@ -7,6 +7,10 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 
+# 代码覆盖率产物
+*.profraw
+*.profdata
+
 # SPM
 .swiftpm/
 .build-spm/
