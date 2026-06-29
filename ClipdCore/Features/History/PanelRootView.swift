@@ -46,7 +46,11 @@ struct PanelRootView: View {
         .ignoresSafeArea()
         .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: store.isPreviewing)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: store.isCreatingTag)
-        .task { await store.reload() }
+        .task {
+            searchFocused = true
+            await store.reload()
+        }
+        .onChange(of: store.focusToken) { _, _ in searchFocused = true }
         .preferredColorScheme(appearance == "light" ? .light : (appearance == "dark" ? .dark : nil))
     }
 
@@ -99,7 +103,6 @@ struct PanelRootView: View {
             Image(systemName: "magnifyingglass").font(.system(size: 12)).foregroundStyle(.tertiary)
             TextField("搜索剪贴板…", text: $store.searchText)
                 .textFieldStyle(.plain).font(.system(size: 13)).focused($searchFocused)
-                .onSubmit { searchFocused = false } // 回车确认搜索 -> 退回导航模式(此时再回车才粘贴)
             if !store.searchText.isEmpty {
                 Button { store.searchText = "" } label: {
                     Image(systemName: "xmark.circle.fill").font(.system(size: 12)).foregroundStyle(.tertiary)

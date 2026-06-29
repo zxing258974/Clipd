@@ -17,6 +17,8 @@ public final class ClipboardStore {
     public var newTagDraft = ""
     /// 当前筛选(全部/已固定/文本/链接/图片/颜色/文件,或某个标签)。
     public private(set) var filter: ClipFilter = .all
+    /// 每次展示面板自增,驱动搜索框重新获焦。
+    public private(set) var focusToken: Int = 0
     /// 搜索词(变化触发去抖查询)。
     public var searchText: String = "" {
         didSet { if oldValue != searchText { scheduleSearch() } }
@@ -58,6 +60,7 @@ public final class ClipboardStore {
         isCreatingTag = false
         newTagDraft = ""
         pendingTagItemID = nil
+        focusToken &+= 1 // 触发搜索框重新获焦(面板为 key 窗口,右键菜单等才正常)
     }
 
     public func reload() async {
